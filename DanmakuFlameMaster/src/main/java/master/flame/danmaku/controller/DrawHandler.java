@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Choreographer;
 
 import java.util.LinkedList;
@@ -505,6 +506,7 @@ public class DrawHandler extends Handler {
         mInSyncAction = true;
         long d = 0;
         long time = startMS - mTimeBase;
+//        Log.e("xijingLog", "DrawHandler syncTimer  startMS="+startMS+"   time="+time);
         if (mNonBlockModeEnable) {
             if (mCallback != null) {
                 mCallback.updateTimer(timer);
@@ -512,6 +514,7 @@ public class DrawHandler extends Handler {
             }
         } else if (!mDanmakusVisible || mRenderingState.nothingRendered || mInWaitingState) {
             timer.update(time);
+            Log.e("xijingLog", "DrawHandler syncTimer ********************************* time="+time);
             mRemainingTime = 0;
             if (mCallback != null) {
                 mCallback.updateTimer(timer);
@@ -519,6 +522,7 @@ public class DrawHandler extends Handler {
         } else {
             long gapTime = time - timer.currMillisecond;
             long averageTime = Math.max(mFrameUpdateRate, getAverageRenderingTime());
+            Log.e("xijingLog", "gapTime="+gapTime+"  averageTime="+averageTime);
             if (gapTime > 2000 || mRenderingState.consumingTime > mCordonTime || averageTime > mCordonTime) {
                 d = gapTime;
                 gapTime = 0;
@@ -534,11 +538,12 @@ public class DrawHandler extends Handler {
                 mLastDeltaTime = d;
             }
             mRemainingTime = gapTime;
+//            timer.update(time);
             timer.add(d);
             if (mCallback != null) {
                 mCallback.updateTimer(timer);
             }
-//            Log.e("DrawHandler", time+"|d:" + d  + "RemaingTime:" + mRemainingTime + ",gapTime:" + gapTime + ",rtim:" + mRenderingState.consumingTime + ",average:" + averageTime);
+            Log.e("DrawHandler", time+"|d:" + d  + "RemaingTime:" + mRemainingTime + ",gapTime:" + gapTime + ",rtim:" + mRenderingState.consumingTime + ",average:" + averageTime);
         }
 
         mInSyncAction = false;
@@ -715,34 +720,34 @@ public class DrawHandler extends Handler {
             return mRenderingState;
 
         if (!mInWaitingState) {
-            AbsDanmakuSync danmakuSync = mContext.danmakuSync;
-            if (danmakuSync != null) {
-                do {
-                    boolean isSyncPlayingState = danmakuSync.isSyncPlayingState();
-                    if (!isSyncPlayingState && quitFlag) {
-                        break;
-                    }
-                    int syncState = danmakuSync.getSyncState();
-                    if (syncState == AbsDanmakuSync.SYNC_STATE_PLAYING) {
-                        long fromTime = timer.currMillisecond;
-                        long toTime = danmakuSync.getUptimeMillis();
-                        long offset = toTime - fromTime;
-                        if (Math.abs(offset) > danmakuSync.getThresholdTimeMills()) {
-                            if (isSyncPlayingState && quitFlag) {
-                                resume();
-                            }
-                            drawTask.requestSync(fromTime, toTime, offset);
-                            timer.update(toTime);
-                            mTimeBase -= offset;
-                            mRemainingTime = 0;
-                        }
-                    } else if (syncState == AbsDanmakuSync.SYNC_STATE_HALT) {
-                        if (isSyncPlayingState && !quitFlag) {
-                            pause();
-                        }
-                    }
-                } while (false);
-            }
+//            AbsDanmakuSync danmakuSync = mContext.danmakuSync;
+//            if (danmakuSync != null) {
+//                do {
+//                    boolean isSyncPlayingState = danmakuSync.isSyncPlayingState();
+//                    if (!isSyncPlayingState && quitFlag) {
+//                        break;
+//                    }
+//                    int syncState = danmakuSync.getSyncState();
+//                    if (syncState == AbsDanmakuSync.SYNC_STATE_PLAYING) {
+//                        long fromTime = timer.currMillisecond;
+//                        long toTime = danmakuSync.getUptimeMillis();
+//                        long offset = toTime - fromTime;
+//                        if (Math.abs(offset) > danmakuSync.getThresholdTimeMills()) {
+//                            if (isSyncPlayingState && quitFlag) {
+//                                resume();
+//                            }
+//                            drawTask.requestSync(fromTime, toTime, offset);
+//                            timer.update(toTime);
+//                            mTimeBase -= offset;
+//                            mRemainingTime = 0;
+//                        }
+//                    } else if (syncState == AbsDanmakuSync.SYNC_STATE_HALT) {
+//                        if (isSyncPlayingState && !quitFlag) {
+//                            pause();
+//                        }
+//                    }
+//                } while (false);
+//            }
         }
         mDisp.setExtraData(canvas);
         mRenderingState.set(drawTask.draw(mDisp));
